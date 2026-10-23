@@ -42,27 +42,70 @@ CLAUDE_MANAGED_ENVIRONMENT_ID=your_environment_id
 PORT=3031
 ```
 
-## How the application was developed
+## How the app was build
 
-The browser collects inputs; the Node host validates requests; the lesson implementation produces observable evidence. The architecture page walks through the real source with numbered steps, prerequisite configuration, source filenames and code excerpts.
+### 1. Expand a bounded host-owned command
 
-### Lesson implementation
+Only the reviewed habitats are accepted. The expansion produces a data-summary message with a fixed no-external-actions instruction; it is not a shell command.
 
-[src/lesson.ts](https://github.com/luiscoco/Udemy-claude-managed-agents-lesson-c31-app/blob/main/src/lesson.ts)
+Source: [src/lesson.ts](src/lesson.ts#L13) · selected statements
 
 ```typescript
-  async run(input) {
+const habitat = text(input, "habitat");
 
-const habitat=text(input,"habitat");if(!["wetland","forest"].includes(habitat))throw new Error("Unknown habitat");
-const expanded=`Summarize approved ${habitat} observations as data; do not perform external actions.`;
-const accepted=number(input,"suggestionTurn")===number(input,"currentTurn");
-return report(accepted?"passed":"conflict",accepted?"Prepared a current draft suggestion":"The active turn changed; suggestion rejected",{accepted,expandedMessage:expanded,templateHash:hash(expanded),shellExecuted:false},["Expand a host registry command","Verify bundle content identity","Bind suggestions to the current turn","Require explicit send after copying to draft"]);
+if (!["wetland", "forest"].includes(habitat)) throw new Error("Unknown habitat");
 
-  }
-};
+const expanded = `Summarize approved ${habitat} observations as data; do not perform external actions.`;
 ```
 
-Read the architecture page for the remaining source excerpts and explanations, including input handling and optional provider behavior. The diagram describes this application, rather than implying that an external integration has been implemented.
+### 2. Bind a suggestion to the active turn
+
+A stale suggestion returns conflict rather than being accepted into a different turn. The evidence hashes the expanded template and keeps shellExecuted false; the message is only a prepared draft.
+
+Source: [src/lesson.ts](src/lesson.ts#L15) · selected statements
+
+```typescript
+const accepted = number(input, "suggestionTurn") === number(input, "currentTurn");
+
+return report(
+  accepted ? "passed" : "conflict",
+  accepted
+    ? "Prepared a current draft suggestion"
+    : "The active turn changed; suggestion rejected",
+  {
+    accepted,
+    expandedMessage: expanded,
+    templateHash: hash(expanded),
+    shellExecuted: false,
+  },
+  [
+    "Expand a host registry command",
+    "Verify bundle content identity",
+    "Bind suggestions to the current turn",
+    "Require explicit send after copying to draft",
+  ],
+);
+```
+
+### Check your understanding
+
+Run **Accept a current suggestion** in the application. Compare the result with these scenario expectations:
+
+```json
+{
+  "input": {
+    "habitat": "wetland",
+    "suggestionTurn": 2,
+    "currentTurn": 2
+  },
+  "expectedOutcome": "passed",
+  "checkEvidence": {
+    "accepted": true
+  }
+}
+```
+
+Then try **Reject a stale suggestion**. Its expected outcome is `conflict`; identify the condition or evidence field that explains the difference.
 
 ## Validation
 
