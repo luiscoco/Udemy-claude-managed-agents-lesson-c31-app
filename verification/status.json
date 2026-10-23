@@ -1,0 +1,13 @@
+{
+  "lesson": "C31",
+  "title": "Capability Bundles and Host-owned Features",
+  "path": "lesson-c31\\lesson-c31-app",
+  "port": 3031,
+  "scenarios": 2,
+  "state": "implemented and verified",
+  "liveScope": "text-only commentary about the local result",
+  "typecheck": true,
+  "localTests": true,
+  "browserSmoke": "passed: desktop, mobile, scenario controls, source view",
+  "liveCommentarySmoke": "passed: real text-only session reached end_turn"
+}

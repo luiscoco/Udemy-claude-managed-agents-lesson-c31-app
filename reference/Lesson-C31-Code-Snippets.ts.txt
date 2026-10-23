@@ -1,0 +1,40 @@
+import Anthropic from "@anthropic-ai/sdk";
+import { z } from "zod";
+import { createHash } from "node:crypto";
+const Observation = z.strictObject({ habitat: z.enum(["wetland", "forest"]) });
+export const commands = { observation: (args: z.infer<typeof Observation>) =>
+  `Write a short field observation for a ${args.habitat} survey.` } as const;
+export function expandCommand(name: string, args: unknown) {
+  if (!Object.hasOwn(commands, name)) throw new Error("Unknown command");
+  return commands.observation(Observation.parse(args));
+}
+export async function runModelCommand(client: Anthropic, authorizedSessionId: string, name: string, args: unknown) {
+  const text = expandCommand(name, args); // reject before API access
+  await client.beta.sessions.events.send(authorizedSessionId, { events: [{ type: "user.message",
+    content: [{ type: "text", text }] }] }, { maxRetries: 0, timeout: 10000 });
+}
+export function verifyBundle(manifest: Readonly<Record<string,string>>, files: Readonly<Record<string,string>>) {
+  const paths = Object.keys(manifest).sort();
+  if (!paths.length) throw new Error("Empty bundle");
+  if (JSON.stringify(paths) !== JSON.stringify(Object.keys(files).sort())) throw new Error("Bundle inventory mismatch");
+  for (const path of paths) {
+    if (!/^[a-zA-Z0-9_/-]+\.(md|json)$/.test(path) || path.startsWith("/") || path.split("/").some(p=>p===".." || p==="." || p===""))
+      throw new Error("Unapproved bundle path");
+    const hash = createHash("sha256").update(files[path],"utf8").digest("hex");
+    if (hash !== manifest[path]) throw new Error("Bundle hash mismatch");
+  }
+  return { verifiedPaths: paths }; // no dynamic imports, remote writes or shell execution
+}
+type Binding = { ownerId: string; sessionId: string; turn: number; responseVersion: string };
+export function acceptSuggestion(suggestion: Binding & { text: string }, current: Binding) {
+  if (suggestion.ownerId !== current.ownerId || suggestion.sessionId !== current.sessionId ||
+      suggestion.turn !== current.turn || suggestion.responseVersion !== current.responseVersion)
+    throw new Error("Foreign or stale suggestion");
+  return { draft: suggestion.text, sent: false as const };
+}
+// Caller authenticates/authorizes the session and controls local command ownership.
+// Registry templates are user-message expansions, not shell commands or Managed skill discovery.
+// Manifest verification is content identity, not code review or remote deployment.
+// Replace the active bundle only AFTER every check succeeds; a failed reload keeps old state.
+// Suggestions and their bindings come from trusted host storage, not browser-provided claims.
+// Copy-to-draft is separate from the user's explicit send, which needs a fresh binding check.

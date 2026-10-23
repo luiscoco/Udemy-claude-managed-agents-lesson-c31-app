@@ -1,0 +1,29 @@
+{
+  "source": "live-provider-commentary",
+  "sessionId": "sesn_01EcHXJFUUBoQtNQHxgrUxWr",
+  "answer": "This local experiment, titled \"Capability Bundles and Host-owned Features,\" tests a draft-suggestion workflow where a host registry command is expanded, its bundle content is verified, and the result is bound to the current turn. The key constraint is that any suggestion must be explicitly sent by the user after copying to draft \u2014 no automatic external action occurs. The outcome is marked as passed, meaning the draft was prepared without executing shell commands or performing remote actions.",
+  "stopReason": "end_turn",
+  "eventTypes": [
+    "session.status_running",
+    "session.thread_status_running",
+    "user.message",
+    "span.model_request_start",
+    "agent.thinking",
+    "agent.message",
+    "span.model_request_end",
+    "session.thread_status_idle",
+    "session.usage",
+    "session.status_idle"
+  ],
+  "requestUsage": [
+    {
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "input_tokens": 641,
+      "output_tokens": 127,
+      "speed": "standard"
+    }
+  ],
+  "experimentHash": "99284d5cdacf7001cdfde5bb57580c0b607d8c7f835498db01e6022f7c174794",
+  "scope": "A real text-only model response about the local experiment. External integrations and the experiment's correctness are not certified by this response."
+}
